@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAnimateOnScroll } from '@/lib/animations';
-import { ArrowUpRight, Book, Video, FileText, Users, BookOpen, Code } from 'lucide-react';
+import { ArrowUpRight, Book, Video, FileText, Users, BookOpen, Code, LucideIcon } from 'lucide-react';
 
 type Resource = {
   id: number;
@@ -12,7 +12,7 @@ type Resource = {
   image: string;
   category: string;
   type: 'course' | 'article' | 'video' | 'community' | 'book' | 'toolkit';
-  typeIcon: (props: any) => JSX.Element;
+  typeIcon: LucideIcon;
 };
 
 const resources: Resource[] = [
