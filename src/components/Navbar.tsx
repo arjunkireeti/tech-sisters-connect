@@ -1,12 +1,24 @@
 
 import { useState, useEffect } from 'react';
-import { Menu, X, Users, BookOpen, Briefcase, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Users, BookOpen, Briefcase, Heart, UserCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +40,12 @@ export function Navbar() {
     { name: 'Opportunities', href: '#opportunities', icon: Briefcase },
     { name: 'Community', href: '#community', icon: Heart },
   ];
+
+  // Get initials from user email
+  const getUserInitials = () => {
+    if (!user?.email) return 'U';
+    return user.email.substring(0, 2).toUpperCase();
+  };
 
   return (
     <header 
@@ -64,13 +82,49 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* CTA Button */}
+        {/* CTA Button or User Menu */}
         <div className="hidden md:block">
-          <Button 
-            className="bg-gradient-to-r from-techpurple-500 to-techteal-500 hover:from-techpurple-600 hover:to-techteal-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
-          >
-            Join Now
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar>
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link to="/profile">Profile</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to="/dashboard">Dashboard</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => signOut()}>
+                  Log out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="outline"
+                asChild
+              >
+                <Link to="/auth/signin">Sign In</Link>
+              </Button>
+              <Button 
+                className="bg-gradient-to-r from-techpurple-500 to-techteal-500 hover:from-techpurple-600 hover:to-techteal-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                asChild
+              >
+                <Link to="/auth/signup">Join Now</Link>
+              </Button>
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu Button */}
@@ -103,12 +157,47 @@ export function Navbar() {
             </a>
           ))}
           <div className="mt-2 px-4">
-            <Button 
-              className="w-full bg-gradient-to-r from-techpurple-500 to-techteal-500 hover:from-techpurple-600 hover:to-techteal-600 text-white"
-              onClick={() => setIsOpen(false)}
-            >
-              Join Now
-            </Button>
+            {user ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 py-2">
+                  <Avatar>
+                    <AvatarImage src={user.user_metadata?.avatar_url} />
+                    <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-medium">{user.email}</p>
+                  </div>
+                </div>
+                <Link to="/profile" onClick={() => setIsOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start">
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    Profile
+                  </Button>
+                </Link>
+                <Button onClick={() => { signOut(); setIsOpen(false); }} variant="outline" className="w-full justify-start text-destructive">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Log out
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Button 
+                  variant="outline"
+                  className="w-full"
+                  asChild
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Link to="/auth/signin">Sign In</Link>
+                </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-techpurple-500 to-techteal-500 hover:from-techpurple-600 hover:to-techteal-600 text-white"
+                  asChild
+                  onClick={() => setIsOpen(false)}
+                >
+                  <Link to="/auth/signup">Join Now</Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>
