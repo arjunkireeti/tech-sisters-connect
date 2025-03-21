@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react';
-import { Navbar } from '@/components/Navbar';
+import Navbar from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { MentorSection } from '@/components/MentorSection';
 import { ResourceSection } from '@/components/ResourceSection';
