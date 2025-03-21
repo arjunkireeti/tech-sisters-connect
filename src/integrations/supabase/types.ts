@@ -9,13 +9,109 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      courses: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string | null
+          id: string
+          level: string | null
+          mentor_id: string
+          title: string
+          topics: string[] | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration?: string | null
+          id?: string
+          level?: string | null
+          mentor_id: string
+          title: string
+          topics?: string[] | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string | null
+          id?: string
+          level?: string | null
+          mentor_id?: string
+          title?: string
+          topics?: string[] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courses_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_postings: {
+        Row: {
+          application_url: string | null
+          company: string
+          created_at: string
+          description: string
+          id: string
+          location: string | null
+          mentor_id: string
+          requirements: string | null
+          salary_range: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          application_url?: string | null
+          company: string
+          created_at?: string
+          description: string
+          id?: string
+          location?: string | null
+          mentor_id: string
+          requirements?: string | null
+          salary_range?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          application_url?: string | null
+          company?: string
+          created_at?: string
+          description?: string
+          id?: string
+          location?: string | null
+          mentor_id?: string
+          requirements?: string | null
+          salary_range?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_postings_mentor_id_fkey"
+            columns: ["mentor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
           full_name: string | null
           id: string
+          is_woman: boolean | null
           updated_at: string
+          user_type: string
           username: string | null
         }
         Insert: {
@@ -23,7 +119,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          is_woman?: boolean | null
           updated_at?: string
+          user_type?: string
           username?: string | null
         }
         Update: {
@@ -31,7 +129,9 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          is_woman?: boolean | null
           updated_at?: string
+          user_type?: string
           username?: string | null
         }
         Relationships: []

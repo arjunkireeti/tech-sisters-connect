@@ -6,11 +6,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import MentorRoute from "./components/MentorRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Profile from "./pages/Profile";
+import MentorDashboard from "./pages/mentor/Dashboard";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,15 @@ const App = () => (
                 <ProtectedRoute>
                   <Profile />
                 </ProtectedRoute>
+              } 
+            />
+            {/* Mentor Routes */}
+            <Route 
+              path="/mentor/dashboard" 
+              element={
+                <MentorRoute>
+                  <MentorDashboard />
+                </MentorRoute>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

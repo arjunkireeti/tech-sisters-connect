@@ -13,10 +13,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   username: z.string().min(3, { message: 'Username must be at least 3 characters' })
@@ -27,6 +30,10 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
   confirmPassword: z.string(),
+  userType: z.enum(['mentor', 'mentee'], {
+    required_error: 'Please select a user type',
+  }),
+  isWoman: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
@@ -46,6 +53,8 @@ export default function SignUp() {
       email: '',
       password: '',
       confirmPassword: '',
+      userType: 'mentee',
+      isWoman: false,
     },
   });
 
@@ -55,11 +64,15 @@ export default function SignUp() {
       await signUp(values.email, values.password, {
         username: values.username,
         full_name: values.fullName,
+        user_type: values.userType,
+        is_woman: values.isWoman,
       });
     } catch (error: any) {
       setAuthError(error.message);
     }
   };
+
+  const userType = form.watch('userType');
 
   return (
     <div className="container max-w-md mx-auto py-20 px-4">
@@ -109,6 +122,62 @@ export default function SignUp() {
                       <Input placeholder="your.email@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="userType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>I am joining as a</FormLabel>
+                    <FormControl>
+                      <RadioGroup
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        className="flex flex-col space-y-1"
+                      >
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="mentee" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Mentee - I'm looking for guidance and learning opportunities
+                          </FormLabel>
+                        </FormItem>
+                        <FormItem className="flex items-center space-x-3 space-y-0">
+                          <FormControl>
+                            <RadioGroupItem value="mentor" />
+                          </FormControl>
+                          <FormLabel className="font-normal cursor-pointer">
+                            Mentor - I want to share my knowledge and help others
+                          </FormLabel>
+                        </FormItem>
+                      </RadioGroup>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isWoman"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="cursor-pointer">
+                        I identify as a woman
+                      </FormLabel>
+                      <FormDescription>
+                        This helps us create a more tailored experience for women in tech
+                      </FormDescription>
+                    </div>
                   </FormItem>
                 )}
               />

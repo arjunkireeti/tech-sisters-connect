@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,7 +8,12 @@ type AuthContextType = {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, userData: { username?: string; full_name?: string }) => Promise<void>;
+  signUp: (email: string, password: string, userData: { 
+    username?: string; 
+    full_name?: string;
+    user_type?: 'mentor' | 'mentee';
+    is_woman?: boolean;
+  }) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
 };
@@ -23,14 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setSession(session);
@@ -72,7 +74,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, userData: { username?: string; full_name?: string }) => {
+  const signUp = async (email: string, password: string, userData: { 
+    username?: string; 
+    full_name?: string;
+    user_type?: 'mentor' | 'mentee';
+    is_woman?: boolean;
+  }) => {
     try {
       setLoading(true);
       const { error } = await supabase.auth.signUp({
