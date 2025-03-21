@@ -8,6 +8,9 @@ import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MentorRoute from "./components/MentorRoute";
 import Index from "./pages/Index";
+import Mentors from "./pages/Mentors";
+import Resources from "./pages/Resources";
+import Opportunities from "./pages/Opportunities";
 import NotFound from "./pages/NotFound";
 import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
@@ -25,6 +28,9 @@ const App = () => (
         <AuthProvider>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/mentors" element={<Mentors />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/opportunities" element={<Opportunities />} />
             <Route path="/auth/signin" element={<SignIn />} />
             <Route path="/auth/signup" element={<SignUp />} />
             <Route 
