@@ -16,6 +16,8 @@ import SignIn from "./pages/auth/SignIn";
 import SignUp from "./pages/auth/SignUp";
 import Profile from "./pages/Profile";
 import MentorDashboard from "./pages/mentor/Dashboard";
+import JobCreate from "./pages/mentor/jobs/JobCreate";
+import CourseCreate from "./pages/mentor/courses/CourseCreate";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,22 @@ const App = () => (
               element={
                 <MentorRoute>
                   <MentorDashboard />
+                </MentorRoute>
+              } 
+            />
+            <Route 
+              path="/mentor/jobs/new" 
+              element={
+                <MentorRoute>
+                  <JobCreate />
+                </MentorRoute>
+              } 
+            />
+            <Route 
+              path="/mentor/courses/new" 
+              element={
+                <MentorRoute>
+                  <CourseCreate />
                 </MentorRoute>
               } 
             />
