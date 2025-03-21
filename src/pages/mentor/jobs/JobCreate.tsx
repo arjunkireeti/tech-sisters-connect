@@ -7,10 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
 
 const JobCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -20,6 +23,7 @@ const JobCreate = () => {
     description: "",
     requirements: "",
     applicationUrl: "",
+    salaryRange: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -29,24 +33,50 @@ const JobCreate = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a job posting.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Placeholder for job posting submission
-      // Will be implemented with Supabase later
+      const { data, error } = await supabase
+        .from('job_postings')
+        .insert([
+          {
+            title: formData.title,
+            company: formData.company,
+            description: formData.description,
+            requirements: formData.requirements,
+            location: formData.location,
+            application_url: formData.applicationUrl,
+            salary_range: formData.salaryRange,
+            mentor_id: user.id,
+          }
+        ])
+        .select();
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Success!",
         description: "Your job posting has been created.",
       });
       
-      setTimeout(() => {
-        navigate("/mentor/dashboard");
-      }, 1500);
-    } catch (error) {
+      navigate("/mentor/dashboard");
+    } catch (error: any) {
+      console.error("Error creating job posting:", error);
       toast({
         title: "Error",
-        description: "Failed to create job posting. Please try again.",
+        description: error.message || "Failed to create job posting. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -121,6 +151,17 @@ const JobCreate = () => {
                   <option value="Freelance">Freelance</option>
                 </select>
               </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="salaryRange">Salary Range</Label>
+              <Input 
+                id="salaryRange" 
+                name="salaryRange" 
+                value={formData.salaryRange} 
+                onChange={handleChange} 
+                placeholder="e.g. $60,000 - $80,000"
+              />
             </div>
             
             <div className="space-y-2">

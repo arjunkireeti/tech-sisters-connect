@@ -1,11 +1,10 @@
 
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Users, BookOpen, Briefcase, Heart, UserCircle, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,18 +14,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/';
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+      toast({
+        title: 'Sign Out Failed',
+        description: 'An error occurred while signing out. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (

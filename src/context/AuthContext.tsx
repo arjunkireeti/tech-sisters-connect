@@ -61,20 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const userProfile = await fetchProfile(session.user.id);
-        setProfile(userProfile);
-      }
-      
-      setLoading(false);
-    });
-
+    // Set up auth state listener FIRST to avoid missing auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log("Auth state changed:", _event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -88,6 +78,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(false);
       }
     );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log("Initial session check:", !!session);
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const userProfile = await fetchProfile(session.user.id);
+        setProfile(userProfile);
+      }
+      
+      setLoading(false);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -166,12 +170,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        toast({
+          title: 'Sign Out Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Clear local state
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
       toast({
         title: 'Signed Out',
         description: 'You have been signed out successfully.',
       });
-      navigate('/');
+      
+      // Force navigation to homepage
+      navigate('/', { replace: true });
     } catch (error: any) {
       toast({
         title: 'Sign Out Failed',

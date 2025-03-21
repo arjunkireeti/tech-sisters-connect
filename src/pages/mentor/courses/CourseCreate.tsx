@@ -7,19 +7,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const CourseCreate = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
-    shortDescription: "",
-    fullDescription: "",
-    skillLevel: "Beginner",
+    description: "",
+    level: "Beginner",
     duration: "",
-    category: "",
-    previewImage: "",
+    topics: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -29,24 +30,54 @@ const CourseCreate = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to create a course.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Placeholder for course creation submission
-      // Will be implemented with Supabase later
+      // Convert topics string to array
+      const topicsArray = formData.topics
+        .split(',')
+        .map(topic => topic.trim())
+        .filter(topic => topic.length > 0);
+
+      const { data, error } = await supabase
+        .from('courses')
+        .insert([
+          {
+            title: formData.title,
+            description: formData.description,
+            level: formData.level,
+            duration: formData.duration,
+            topics: topicsArray,
+            mentor_id: user.id,
+          }
+        ])
+        .select();
+
+      if (error) {
+        throw error;
+      }
       
       toast({
         title: "Success!",
         description: "Your course has been created.",
       });
       
-      setTimeout(() => {
-        navigate("/mentor/dashboard");
-      }, 1500);
-    } catch (error) {
+      navigate("/mentor/dashboard");
+    } catch (error: any) {
+      console.error("Error creating course:", error);
       toast({
         title: "Error",
-        description: "Failed to create course. Please try again.",
+        description: error.message || "Failed to create course. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -57,7 +88,7 @@ const CourseCreate = () => {
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Create New Course</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Create Course</h1>
         <p className="text-muted-foreground mt-1">
           Share your knowledge with mentees
         </p>
@@ -81,37 +112,24 @@ const CourseCreate = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="shortDescription">Short Description*</Label>
-              <Input 
-                id="shortDescription" 
-                name="shortDescription" 
-                value={formData.shortDescription} 
-                onChange={handleChange} 
-                required 
-                placeholder="Brief overview of your course (1-2 sentences)"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="fullDescription">Full Description*</Label>
+              <Label htmlFor="description">Course Description*</Label>
               <Textarea 
-                id="fullDescription" 
-                name="fullDescription" 
-                value={formData.fullDescription} 
+                id="description" 
+                name="description" 
+                value={formData.description} 
                 onChange={handleChange} 
                 rows={5} 
                 required 
-                placeholder="Detailed description of what students will learn"
               />
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="skillLevel">Skill Level*</Label>
+                <Label htmlFor="level">Difficulty Level*</Label>
                 <select
-                  id="skillLevel"
-                  name="skillLevel"
-                  value={formData.skillLevel}
+                  id="level"
+                  name="level"
+                  value={formData.level}
                   onChange={handleChange}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
                   required
@@ -123,39 +141,27 @@ const CourseCreate = () => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="duration">Estimated Duration*</Label>
+                <Label htmlFor="duration">Duration*</Label>
                 <Input 
                   id="duration" 
                   name="duration" 
                   value={formData.duration} 
                   onChange={handleChange} 
                   required 
-                  placeholder="e.g. 4 weeks, 10 hours"
+                  placeholder="e.g. 6 weeks, 3 months"
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="category">Category*</Label>
+              <Label htmlFor="topics">Topics (comma separated)*</Label>
               <Input 
-                id="category" 
-                name="category" 
-                value={formData.category} 
+                id="topics" 
+                name="topics" 
+                value={formData.topics} 
                 onChange={handleChange} 
                 required 
-                placeholder="e.g. Web Development, Data Science"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="previewImage">Preview Image URL</Label>
-              <Input 
-                id="previewImage" 
-                name="previewImage" 
-                type="url" 
-                value={formData.previewImage} 
-                onChange={handleChange} 
-                placeholder="https://..."
+                placeholder="e.g. JavaScript, React, CSS"
               />
             </div>
           </CardContent>
