@@ -170,6 +170,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setLoading(true);
+      
+      // Clear local state first to provide immediate feedback to the user
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -178,13 +184,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           description: error.message,
           variant: 'destructive',
         });
+        // If sign out fails, we might need to try to restore the session
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          const userProfile = await fetchProfile(session.user.id);
+          setProfile(userProfile);
+        }
+        
         return;
       }
-      
-      // Clear local state
-      setUser(null);
-      setSession(null);
-      setProfile(null);
       
       toast({
         title: 'Signed Out',

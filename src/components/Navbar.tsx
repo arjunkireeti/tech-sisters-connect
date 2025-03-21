@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Users, BookOpen, Briefcase, Heart, UserCircle, LogIn } from 'lucide-react';
@@ -27,7 +26,9 @@ const Navbar = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("Sign out initiated");
       await signOut();
+      console.log("Sign out completed");
     } catch (error) {
       console.error('Sign out error:', error);
       toast({
@@ -93,7 +94,7 @@ const Navbar = () => {
                       </DropdownMenuItem>
                     )}
                     
-                    <DropdownMenuItem onClick={handleSignOut}>
+                    <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
                       <LogIn className="mr-2 h-4 w-4" />
                       <span>Sign out</span>
                     </DropdownMenuItem>
@@ -185,6 +186,7 @@ const Navbar = () => {
               
               <button
                 onClick={() => {
+                  console.log("Mobile sign out initiated");
                   handleSignOut();
                   setIsMenuOpen(false);
                 }}
