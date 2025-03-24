@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User, Mail, Lock } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -43,6 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SignUp() {
   const { signUp, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -60,7 +61,10 @@ export default function SignUp() {
 
   const onSubmit = async (values: FormValues) => {
     setAuthError(null);
+    setSubmitting(true);
+    
     try {
+      console.log("SignUp form submitted:", values.email, values.username);
       await signUp(values.email, values.password, {
         username: values.username,
         full_name: values.fullName,
@@ -68,14 +72,18 @@ export default function SignUp() {
         is_woman: values.isWoman,
       });
     } catch (error: any) {
-      setAuthError(error.message);
+      console.error("SignUp form error:", error);
+      setAuthError(error.message || "An error occurred during sign up");
+    } finally {
+      setSubmitting(false);
     }
   };
 
+  const isLoading = loading || submitting;
   const userType = form.watch('userType');
 
   return (
-    <div className="container max-w-md mx-auto py-20 px-4">
+    <div className="container max-w-md mx-auto py-10 px-4">
       <Card>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
@@ -93,7 +101,14 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel>Username</FormLabel>
                     <FormControl>
-                      <Input placeholder="username" {...field} />
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="username" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -106,7 +121,14 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Your Name" {...field} />
+                      <div className="relative">
+                        <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="Your Name" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -119,7 +141,14 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="your.email@example.com" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -188,7 +217,15 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,17 +238,27 @@ export default function SignUp() {
                   <FormItem>
                     <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {authError && (
-                <div className="text-destructive text-sm font-medium">{authError}</div>
+                <div className="text-destructive text-sm font-medium p-2 bg-destructive/10 rounded-md">
+                  {authError}
+                </div>
               )}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating account...

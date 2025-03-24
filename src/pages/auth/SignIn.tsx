@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail, Lock } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -27,6 +27,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SignIn() {
   const { signIn, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
   const form = useForm<FormValues>({
@@ -39,12 +40,20 @@ export default function SignIn() {
 
   const onSubmit = async (values: FormValues) => {
     setAuthError(null);
+    setSubmitting(true);
+    
     try {
+      console.log("SignIn form submitted:", values.email);
       await signIn(values.email, values.password);
     } catch (error: any) {
-      setAuthError(error.message);
+      console.error("SignIn form error:", error);
+      setAuthError(error.message || "An error occurred during sign in");
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  const isLoading = loading || submitting;
 
   return (
     <div className="container max-w-md mx-auto py-20 px-4">
@@ -65,7 +74,14 @@ export default function SignIn() {
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} />
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          placeholder="your.email@example.com" 
+                          className="pl-10" 
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -78,17 +94,27 @@ export default function SignIn() {
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••••" {...field} />
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••" 
+                          className="pl-10"
+                          {...field} 
+                        />
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
               {authError && (
-                <div className="text-destructive text-sm font-medium">{authError}</div>
+                <div className="text-destructive text-sm font-medium p-2 bg-destructive/10 rounded-md">
+                  {authError}
+                </div>
               )}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Signing in...

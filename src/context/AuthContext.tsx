@@ -63,13 +63,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Set up auth state listener FIRST to avoid missing auth events
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Auth state changed:", _event, !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, currentSession) => {
+        console.log("Auth state changed event:", event);
+        console.log("Auth state changed session:", !!currentSession);
         
-        if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        
+        if (currentSession?.user) {
+          const userProfile = await fetchProfile(currentSession.user.id);
           setProfile(userProfile);
         } else {
           setProfile(null);
@@ -80,28 +82,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log("Initial session check:", !!session);
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      console.log("Initial session check:", !!currentSession);
       
-      if (session?.user) {
-        const userProfile = await fetchProfile(session.user.id);
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        const userProfile = await fetchProfile(currentSession.user.id);
         setProfile(userProfile);
       }
       
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      // Clean up subscription when the component unmounts
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      console.log("Signing in with:", email);
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
       
       if (error) {
+        console.error("Sign in error:", error);
         toast({
           title: 'Sign In Failed',
           description: error.message,
@@ -110,12 +122,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
       
+      console.log("Sign in successful:", !!data.user);
       toast({
         title: 'Welcome back!',
         description: 'You have successfully signed in.',
       });
+      
+      // Manual update of state in case the auth listener misses it
+      setSession(data.session);
+      setUser(data.user);
+      
+      if (data.user) {
+        const userProfile = await fetchProfile(data.user.id);
+        setProfile(userProfile);
+      }
+      
       navigate('/');
     } catch (error: any) {
+      console.error("Sign in exception:", error);
       toast({
         title: 'Sign In Failed',
         description: error.message,
@@ -134,7 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      console.log("Signing up with:", email, userData);
+      
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -143,6 +169,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (error) {
+        console.error("Sign up error:", error);
         toast({
           title: 'Sign Up Failed',
           description: error.message,
@@ -151,12 +178,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
+      console.log("Sign up successful:", !!data.user);
       toast({
         title: 'Account Created',
         description: 'Please check your email to confirm your account.',
       });
+      
       navigate('/auth/signin');
     } catch (error: any) {
+      console.error("Sign up exception:", error);
       toast({
         title: 'Sign Up Failed',
         description: error.message,
@@ -169,42 +199,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     try {
+      console.log("Sign out started");
       setLoading(true);
       
-      // Clear local state first to provide immediate feedback to the user
+      // Clear local state first to provide immediate feedback
       setUser(null);
       setSession(null);
       setProfile(null);
       
+      // Force navigation first for better UX
+      navigate('/', { replace: true });
+      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
+        console.error("Sign out error:", error);
         toast({
           title: 'Sign Out Failed',
           description: error.message,
           variant: 'destructive',
         });
-        // If sign out fails, we might need to try to restore the session
-        const { data: { session } } = await supabase.auth.getSession();
-        setSession(session);
-        setUser(session?.user ?? null);
         
-        if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
+        // If sign out fails, try to restore the session
+        const { data } = await supabase.auth.getSession();
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        
+        if (data.session?.user) {
+          const userProfile = await fetchProfile(data.session.user.id);
           setProfile(userProfile);
         }
         
         return;
       }
       
+      console.log("Sign out completed successfully");
       toast({
         title: 'Signed Out',
         description: 'You have been signed out successfully.',
       });
-      
-      // Force navigation to homepage
-      navigate('/', { replace: true });
     } catch (error: any) {
+      console.error("Sign out exception:", error);
       toast({
         title: 'Sign Out Failed',
         description: error.message,
