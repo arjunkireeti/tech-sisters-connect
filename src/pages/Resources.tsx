@@ -10,9 +10,9 @@ type Course = {
   id: string;
   title: string;
   description: string;
-  level: string;
-  duration: string;
-  topics: string[];
+  level: string | null;
+  duration: string | null;
+  topics: string[] | null;
   created_at: string;
   mentor_id: string;
 };
@@ -25,16 +25,19 @@ const Resources = () => {
   useEffect(() => {
     const fetchCourses = async () => {
       try {
+        console.log('Fetching courses from Supabase...');
         const { data, error } = await supabase
           .from('courses')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
 
-        setCourses(data as Course[]);
+        console.log('Courses fetched:', data);
+        setCourses(data || []);
       } catch (error: any) {
         console.error('Error fetching courses:', error);
         toast({
@@ -51,8 +54,10 @@ const Resources = () => {
   }, [toast]);
 
   // Helper function to get badge color based on level
-  const getLevelColor = (level: string) => {
-    switch (level?.toLowerCase()) {
+  const getLevelColor = (level: string | null) => {
+    if (!level) return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+    
+    switch (level.toLowerCase()) {
       case 'beginner':
         return 'bg-green-100 text-green-800 hover:bg-green-100';
       case 'intermediate':
@@ -92,10 +97,14 @@ const Resources = () => {
               <Card key={course.id} className="h-full transition-all hover:shadow-md">
                 <CardHeader>
                   <div className="flex flex-wrap gap-1 mb-2">
-                    <Badge className={getLevelColor(course.level)}>
-                      {course.level}
-                    </Badge>
-                    <Badge variant="outline">{course.duration}</Badge>
+                    {course.level && (
+                      <Badge className={getLevelColor(course.level)}>
+                        {course.level}
+                      </Badge>
+                    )}
+                    {course.duration && (
+                      <Badge variant="outline">{course.duration}</Badge>
+                    )}
                   </div>
                   <CardTitle className="text-xl">{course.title}</CardTitle>
                   <CardDescription className="text-sm mt-1">
@@ -104,13 +113,15 @@ const Resources = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm mb-4">{course.description}</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {course.topics && course.topics.map((topic, index) => (
-                      <Badge key={index} variant="secondary" className="text-xs">
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
+                  {course.topics && course.topics.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {course.topics.map((topic, index) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {topic}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

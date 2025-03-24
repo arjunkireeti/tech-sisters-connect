@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BriefcaseIcon, ExternalLinkIcon } from "lucide-react";
@@ -11,7 +10,7 @@ type JobPosting = {
   id: string;
   title: string;
   company: string;
-  location: string;
+  location: string | null;
   description: string;
   application_url: string | null;
   created_at: string;
@@ -26,16 +25,19 @@ const Opportunities = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try {
+        console.log('Fetching jobs from Supabase...');
         const { data, error } = await supabase
           .from('job_postings')
           .select('*')
           .order('created_at', { ascending: false });
 
         if (error) {
+          console.error('Supabase error:', error);
           throw error;
         }
 
-        setJobs(data as JobPosting[]);
+        console.log('Jobs fetched:', data);
+        setJobs(data || []);
       } catch (error: any) {
         console.error('Error fetching jobs:', error);
         toast({
@@ -82,7 +84,7 @@ const Opportunities = () => {
                     <div>
                       <CardTitle className="text-xl">{job.title}</CardTitle>
                       <CardDescription className="text-base mt-1">
-                        {job.company} • {job.location}
+                        {job.company} • {job.location || 'Remote'}
                       </CardDescription>
                     </div>
                   </div>
